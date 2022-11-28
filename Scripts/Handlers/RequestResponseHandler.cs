@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Collections;
 using UnityEngine;
 
 namespace Unity.Netcode.Insthync.ResquestResponse
@@ -9,7 +10,7 @@ namespace Unity.Netcode.Insthync.ResquestResponse
     public class RequestResponseHandler
     {
         public readonly RequestResponseManager Manager;
-        public readonly FastBufferWriter Writer = new FastBufferWriter();
+        public readonly FastBufferWriter Writer = new FastBufferWriter(1300, Allocator.Temp, 4096000);
         protected readonly Dictionary<ushort, IRequestInvoker> requestInvokers = new Dictionary<ushort, IRequestInvoker>();
         protected readonly Dictionary<ushort, IResponseInvoker> responseInvokers = new Dictionary<ushort, IResponseInvoker>();
         protected readonly ConcurrentDictionary<uint, RequestCallback> requestCallbacks = new ConcurrentDictionary<uint, RequestCallback>();
