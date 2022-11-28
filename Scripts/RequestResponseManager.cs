@@ -26,6 +26,12 @@ namespace Unity.Netcode.Insthync.ResquestResponse
         private RequestResponseHandler _serverReqResHandler;
         private RequestResponseHandler _clientReqResHandler;
 
+        private void Awake()
+        {
+            _serverReqResHandler = new RequestResponseHandler(this);
+            _clientReqResHandler = new RequestResponseHandler(this);
+        }
+
         private void Update()
         {
             if (!autoSetupByNetworkState)
@@ -46,9 +52,6 @@ namespace Unity.Netcode.Insthync.ResquestResponse
             if (_alreadySetup)
                 return;
             _alreadySetup = true;
-
-            _serverReqResHandler = new RequestResponseHandler(this);
-            _clientReqResHandler = new RequestResponseHandler(this);
 
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(RequestMessageName, RequestCallback);
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(ResponseMessageName, ResponseCallback);
