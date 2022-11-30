@@ -1,3 +1,5 @@
+using Unity.Collections;
+
 namespace Unity.Netcode.Insthync.ResquestResponse
 {
     public interface IRequestInvoker
@@ -38,20 +40,27 @@ namespace Unity.Netcode.Insthync.ResquestResponse
         private void RequestProceeded(ulong clientId, uint requestId, AckResponseCode responseCode, TResponse response, SerializerDelegate extraResponseSerializer)
         {
             // Write response
-            handler.Writer.Truncate();
-            handler.Writer.WriteNetworkSerializable(response);
-            if (extraResponseSerializer != null)
-                extraResponseSerializer.Invoke(handler.Writer);
-            ResponseMessage responseMessage = new ResponseMessage()
+            FastBufferWriter writer;
+            ResponseMessage responseMessage;
+            using (writer = new FastBufferWriter(1300, Allocator.Temp, 4096000))
             {
-                requestId = requestId,
-                responseCode = responseCode,
-                data = handler.Writer.ToArray(),
-            };
-            handler.Writer.Truncate();
-            handler.Writer.WriteNetworkSerializable(responseMessage);
-            // Send response
-            handler.Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(handler.Manager.ResponseMessageName, clientId, handler.Writer);
+                writer.WriteNetworkSerializable(response);
+                if (extraResponseSerializer != null)
+                    extraResponseSerializer.Invoke(writer);
+                responseMessage = new ResponseMessage()
+                {
+                    requestId = requestId,
+                    responseCode = responseCode,
+                    data = writer.ToArray(),
+                };
+            }
+
+            using (writer = new FastBufferWriter(1300, Allocator.Temp, 4096000))
+            {
+                writer.WriteNetworkSerializable(responseMessage);
+                // Send response
+                handler.Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(handler.Manager.ResponseMessageName, clientId, writer);
+            }
         }
     }
 }

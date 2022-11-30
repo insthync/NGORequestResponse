@@ -10,7 +10,6 @@ namespace Unity.Netcode.Insthync.ResquestResponse
     public class RequestResponseHandler
     {
         public readonly RequestResponseManager Manager;
-        public readonly FastBufferWriter Writer = new FastBufferWriter(1300, Allocator.Temp, 4096000);
         protected readonly Dictionary<ushort, IRequestInvoker> requestInvokers = new Dictionary<ushort, IRequestInvoker>();
         protected readonly Dictionary<ushort, IResponseInvoker> responseInvokers = new Dictionary<ushort, IResponseInvoker>();
         protected readonly ConcurrentDictionary<uint, RequestCallback> requestCallbacks = new ConcurrentDictionary<uint, RequestCallback>();
@@ -86,20 +85,28 @@ namespace Unity.Netcode.Insthync.ResquestResponse
             uint requestId = CreateRequest(responseInvokers[requestType], responseHandler);
             HandleRequestTimeout(requestId, millisecondsTimeout);
             // Write request
-            Writer.Truncate();
-            Writer.WriteNetworkSerializable(request);
-            if (extraRequestSerializer != null)
-                extraRequestSerializer.Invoke(Writer);
-            RequestMessage requestMessage = new RequestMessage()
+            FastBufferWriter writer;
+            RequestMessage requestMessage;
+            using (writer = new FastBufferWriter(1300, Allocator.Temp, 4096000))
             {
-                requestType = requestType,
-                requestId = requestId,
-                data = Writer.ToArray(),
-            };
-            Writer.Truncate();
-            Writer.WriteNetworkSerializable(requestMessage);
-            // Send request
-            Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(Manager.RequestMessageName, clientId, Writer);
+                writer.WriteNetworkSerializable(request);
+                if (extraRequestSerializer != null)
+                    extraRequestSerializer.Invoke(writer);
+                requestMessage = new RequestMessage()
+                {
+                    requestType = requestType,
+                    requestId = requestId,
+                    data = writer.ToArray(),
+                };
+            }
+
+            using (writer = new FastBufferWriter(1300, Allocator.Temp, 4096000))
+            {
+                writer.WriteNetworkSerializable(requestMessage);
+                // Send request
+                Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(Manager.RequestMessageName, clientId, writer);
+                Manager.NetworkManager.CustomMessagingManager.SendUnnamedMessage(clientId, writer);
+            }
             return true;
         }
 
@@ -120,15 +127,18 @@ namespace Unity.Netcode.Insthync.ResquestResponse
                     requestId = requestId,
                     responseCode = AckResponseCode.Unimplemented,
                 };
-                Writer.Truncate();
-                Writer.WriteNetworkSerializable(responseMessage);
-                // Send response
-                Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(Manager.ResponseMessageName, clientId, Writer);
+                FastBufferWriter writer;
+                using (writer = new FastBufferWriter(1300, Allocator.Temp, 4096000))
+                {
+                    writer.WriteNetworkSerializable(responseMessage);
+                    // Send response
+                    Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(Manager.ResponseMessageName, clientId, writer);
+                }
                 Debug.LogError($"Cannot proceed request {requestType} not registered.");
                 return;
             }
             // Invoke request and create response
-            requestInvokers[requestType].InvokeRequest(new RequestHandlerData(requestType, requestId, this, clientId, new FastBufferReader(requestMessage.data, Collections.Allocator.Temp)));
+            requestInvokers[requestType].InvokeRequest(new RequestHandlerData(requestType, requestId, this, clientId, new FastBufferReader(requestMessage.data, Allocator.Temp)));
         }
 
         /// <summary>
@@ -142,7 +152,7 @@ namespace Unity.Netcode.Insthync.ResquestResponse
             AckResponseCode responseCode = responseMessage.responseCode;
             if (requestCallbacks.ContainsKey(requestId))
             {
-                requestCallbacks[requestId].Response(clientId, new FastBufferReader(responseMessage.data, Collections.Allocator.Temp), responseCode);
+                requestCallbacks[requestId].Response(clientId, new FastBufferReader(responseMessage.data, Allocator.Temp), responseCode);
                 requestCallbacks.TryRemove(requestId, out _);
             }
         }
