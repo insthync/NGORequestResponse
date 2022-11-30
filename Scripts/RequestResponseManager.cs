@@ -39,32 +39,22 @@ namespace Unity.Netcode.Insthync.ResquestResponse
 
             if (NetworkManager.IsServer || networkManager.IsConnectedClient)
             {
-                Setup();
+                if (!_alreadySetup)
+                {
+                    _alreadySetup = true;
+                    Setup();
+                }
             }
             else
             {
-                Desetup();
+                _alreadySetup = false;
             }
         }
 
         public void Setup()
         {
-            if (_alreadySetup)
-                return;
-            _alreadySetup = true;
-
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(RequestMessageName, RequestCallback);
             networkManager.CustomMessagingManager.RegisterNamedMessageHandler(ResponseMessageName, ResponseCallback);
-        }
-
-        public void Desetup()
-        {
-            if (!_alreadySetup)
-                return;
-            _alreadySetup = false;
-
-            networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(RequestMessageName);
-            networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(ResponseMessageName);
         }
 
         private void RequestCallback(ulong clientId, FastBufferReader messagePayload)
