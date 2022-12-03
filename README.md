@@ -3,7 +3,7 @@ A Request and response addon for Unity's Netcode for Game Object
 
 ## How to use it
 
-Attach `RequestResponseManager` to any game object, but it must be able to access to network manager, then set ref of network manager to it.
+Attach `RequestResponseManager` to any game object.
 
 Register requests by uses functions from `RequestResponseManager` class, example:
 
