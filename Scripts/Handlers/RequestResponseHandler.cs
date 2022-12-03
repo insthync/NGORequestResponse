@@ -104,8 +104,8 @@ namespace Unity.Netcode.Insthync.ResquestResponse
             {
                 writer.WriteNetworkSerializable(requestMessage);
                 // Send request
-                Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(Manager.RequestMessageName, clientId, writer);
-                Manager.NetworkManager.CustomMessagingManager.SendUnnamedMessage(clientId, writer);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(Manager.RequestMessageName, clientId, writer);
+                NetworkManager.Singleton.CustomMessagingManager.SendUnnamedMessage(clientId, writer);
             }
             return true;
         }
@@ -132,7 +132,7 @@ namespace Unity.Netcode.Insthync.ResquestResponse
                 {
                     writer.WriteNetworkSerializable(responseMessage);
                     // Send response
-                    Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(Manager.ResponseMessageName, clientId, writer);
+                    NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(Manager.ResponseMessageName, clientId, writer);
                 }
                 Debug.LogError($"Cannot proceed request {requestType} not registered.");
                 return;

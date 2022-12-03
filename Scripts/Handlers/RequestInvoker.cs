@@ -59,7 +59,7 @@ namespace Unity.Netcode.Insthync.ResquestResponse
             {
                 writer.WriteNetworkSerializable(responseMessage);
                 // Send response
-                handler.Manager.NetworkManager.CustomMessagingManager.SendNamedMessage(handler.Manager.ResponseMessageName, clientId, writer);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(handler.Manager.ResponseMessageName, clientId, writer);
             }
         }
     }

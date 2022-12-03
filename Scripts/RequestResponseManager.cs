@@ -5,10 +5,6 @@ namespace Unity.Netcode.Insthync.ResquestResponse
     public class RequestResponseManager : MonoBehaviour
     {
         [SerializeField]
-        private NetworkManager networkManager;
-        public NetworkManager NetworkManager => networkManager;
-
-        [SerializeField]
         private string requestMessageName = "REQ";
         public string RequestMessageName => requestMessageName;
 
@@ -34,10 +30,10 @@ namespace Unity.Netcode.Insthync.ResquestResponse
 
         private void Update()
         {
-            if (!autoSetupByNetworkState)
+            if (!autoSetupByNetworkState || !NetworkManager.Singleton)
                 return;
 
-            if (NetworkManager.IsServer || networkManager.IsConnectedClient)
+            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsConnectedClient)
             {
                 if (!_alreadySetup)
                 {
@@ -53,8 +49,8 @@ namespace Unity.Netcode.Insthync.ResquestResponse
 
         public void Setup()
         {
-            networkManager.CustomMessagingManager.RegisterNamedMessageHandler(RequestMessageName, RequestCallback);
-            networkManager.CustomMessagingManager.RegisterNamedMessageHandler(ResponseMessageName, ResponseCallback);
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RequestMessageName, RequestCallback);
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(ResponseMessageName, ResponseCallback);
         }
 
         private void RequestCallback(ulong clientId, FastBufferReader messagePayload)
