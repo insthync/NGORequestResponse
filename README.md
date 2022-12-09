@@ -1,5 +1,5 @@
 # NGOReqRes
-A Request and response addon for Unity's Netcode for Game Object
+A Request and response addon for Unity's [Netcode for Game Objects](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects)
 
 ## How to use it
 
